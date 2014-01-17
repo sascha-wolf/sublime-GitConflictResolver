@@ -1,0 +1,14 @@
+[
+    {
+        "caption": "Git Conflict Resolver: Find Next Conflict",
+        "command": "find_next_conflict"
+    },
+    {
+        "caption": "Git Conflict Resolver: Keep Mine",
+        "command": "keep_mine"
+    },
+    {
+        "caption": "Git Conflict Resolver: Keep Theirs",
+        "command": "keep_theirs"
+    }
+]
