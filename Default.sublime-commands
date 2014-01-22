@@ -4,11 +4,11 @@
         "command": "find_next_conflict"
     },
     {
-        "caption": "Git Conflict Resolver: Keep Mine",
-        "command": "keep_mine"
+        "caption": "Git Conflict Resolver: Keep New",
+        "command": "keep_new"
     },
     {
-        "caption": "Git Conflict Resolver: Keep Theirs",
-        "command": "keep_theirs"
+        "caption": "Git Conflict Resolver: Keep Old",
+        "command": "keep_old"
     }
 ]

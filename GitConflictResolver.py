@@ -1,9 +1,13 @@
-import sublime_plugin
+import sublime_plugin, sublime
 import re
 
 sentinel = object()
 
-CONFLICT_PATTERN = re.compile(r'(?s)<<<<<<<[\w ]*(.*?)=======\n(.*?)>>>>>>>[\w ]*')
+CONFLICT_PATTERN = re.compile(r'<<<<<<<[^\n]*\n((?s).*?)=======\n((?s).*?)>>>>>>>[^\n]*\n')
+
+messages = {
+    "no_conflict_found": "No conflict found"
+}
 
 
 def findConflict(view, begin=sentinel):
@@ -13,11 +17,19 @@ def findConflict(view, begin=sentinel):
         else:
             begin = view.sel()[0].begin()
 
-    return view.find(CONFLICT_PATTERN.pattern, begin)
+    conflict_region = view.find(CONFLICT_PATTERN.pattern, begin)
+
+    if not conflict_region:
+        conflict_region = view.find(CONFLICT_PATTERN.pattern, begin)
+        if not conflict_region:
+            sublime.status_message(messages['no_conflict_found'])
+            return None
+
+    return conflict_region
 
 
-def keep(view, region, theirs):
-    if theirs:
+def keep(view, region, old):
+    if old:
         keep_type = r'\1'
     else:
         keep_type = r'\2'
@@ -30,7 +42,7 @@ class FindNextConflict(sublime_plugin.TextCommand):
 
     def run(self, edit):
         conflict_region = findConflict(self.view)
-        if conflict_region.empty() or conflict_region is None:
+        if conflict_region is None:
             return
 
         # Add the region to the selection
@@ -39,17 +51,23 @@ class FindNextConflict(sublime_plugin.TextCommand):
         self.view.sel().add(conflict_region)
 
 
-class KeepMine(sublime_plugin.TextCommand):
+class KeepNew(sublime_plugin.TextCommand):
     def run(self, edit):
         conflict_region = findConflict(self.view)
 
-        replace_text = keep(self.view, conflict_region, theirs=False)
+        if conflict_region is None:
+            return
+
+        replace_text = keep(self.view, conflict_region, old=False)
         self.view.replace(edit, conflict_region, replace_text)
 
 
-class KeepTheirs(sublime_plugin.TextCommand):
+class KeepOld(sublime_plugin.TextCommand):
     def run(self, edit):
         conflict_region = findConflict(self.view)
 
-        replace_text = keep(self.view, conflict_region, theirs=True)
+        if conflict_region is None:
+            return
+
+        replace_text = keep(self.view, conflict_region, old=True)
         self.view.replace(edit, conflict_region, replace_text)
