@@ -6,7 +6,7 @@ A Sublime Text plugin to help you solve this nasty merge conflicts.
 Commands
 ---------
 
-Git Conflict Resolver ships with three commands: Find Next Conflict, Keep Old, Keep New.
+Git Conflict Resolver ships with three commands: `Find Next Conflict`, `Keep Old`, `Keep New`.
 
 All of them are pretty self explaining. The plugin always consideres the first block as the old block while the second represents the new one.
 
