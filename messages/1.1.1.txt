@@ -1,0 +1,19 @@
+Add a new command `Keep Common Ancestor` which is especially designed for the `diff3` conflict type in Git.
+
+A little example from the Git documentation:
+
+	Here are lines that are either unchanged from the common
+	ancestor, or cleanly resolved because only one side changed.
+	<<<<<<< yours:sample.txt
+	Conflict resolution is hard;
+	let's go shopping.
+	|||||||
+	Conflict resolution is hard.
+	=======
+	Git makes conflict resolution easy.
+	>>>>>>> theirs:sample.txt
+	And here is another line that is cleanly resolved or unmodified.
+
+Git Conflict Resolver will match on "Conflict resolution is hard." as the common ancestor.
+
+Enjoy!
