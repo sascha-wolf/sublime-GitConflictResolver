@@ -6,7 +6,7 @@ A Sublime Text plugin to help you solve this nasty merge conflicts.
 Commands
 ---------
 
-Git Conflict Resolver ships with three commands: `Find Next Conflict`, `Keep Old`, `Keep New`, `Keep Common Ancestor`.
+Git Conflict Resolver ships with four commands: `Find Next Conflict`, `Keep Old`, `Keep New`, `Keep Common Ancestor`.
 
 All of them are pretty self explaining. The `Keep Common Ancestor` is especially interesting for the diff3 conflict type.
 
