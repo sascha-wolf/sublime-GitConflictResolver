@@ -10,5 +10,9 @@
     {
         "caption": "Git Conflict Resolver: Keep Old",
         "command": "keep_old"
+    },
+    {
+        "caption": "Git Conflict Resolver: Keep Common Ancestor",
+        "command": "keep_common_ancestor"
     }
 ]

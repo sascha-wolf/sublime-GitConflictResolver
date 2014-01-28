@@ -3,10 +3,16 @@ import re
 
 sentinel = object()
 
-CONFLICT_PATTERN = re.compile(r'<<<<<<<[^\n]*\n((?s).*?)=======\n((?s).*?)>>>>>>>[^\n]*\n')
+# view.find sadly can't handle naming groups
+NO_NAMING_GROUPS_PATTERN = "(?s)<{7}[^\n]*\n(.*?)(?:\|{7}[^\n]*\n(.*?))?={7}\n(.*?)>{7}[^\n]*\n"
+CONFLICT_REGEX = re.compile(r"(?s)<{7}[^\n]*\n(?P<old>.*?)(?:\|{7}[^\n]*\n(?P<ancestor>.*?))?={7}\n(?P<new>.*?)>{7}[^\n]*\n")
+OLD = 'old'
+NEW = 'new'
+ANCESTOR = 'ancestor'
 
 messages = {
-    "no_conflict_found": "No conflict found"
+    "no_conflict_found": "No conflict found",
+    "no_such_group": "No such conflict group found"
 }
 
 
@@ -17,10 +23,10 @@ def findConflict(view, begin=sentinel):
         else:
             begin = view.sel()[0].begin()
 
-    conflict_region = view.find(CONFLICT_PATTERN.pattern, begin)
+    conflict_region = view.find(NO_NAMING_GROUPS_PATTERN, begin)
 
     if not conflict_region:
-        conflict_region = view.find(CONFLICT_PATTERN.pattern, begin)
+        conflict_region = view.find(NO_NAMING_GROUPS_PATTERN, 0)
         if not conflict_region:
             sublime.status_message(messages['no_conflict_found'])
             return None
@@ -28,18 +34,33 @@ def findConflict(view, begin=sentinel):
     return conflict_region
 
 
-def keep(view, region, old):
-    if old:
-        keep_type = r'\1'
-    else:
-        keep_type = r'\2'
-
+def keep(view, region, keep_type):
     conflict_text = view.substr(region)
-    return CONFLICT_PATTERN.sub(keep_type, conflict_text)
+    match = CONFLICT_REGEX.search(conflict_text)
+
+    # If we didn't matched the group return None
+    if not match.group(keep_type):
+        sublime.status_message(messages['no_such_group'])
+        return None
+
+    return CONFLICT_REGEX.sub(r'\g<'+keep_type+'>', conflict_text)
+
+
+def resolveConflict(view, edit, keep_type):
+    conflict_region = findConflict(view)
+
+    if conflict_region is None:
+        return
+
+    replace_text = keep(view, conflict_region, NEW)
+
+    if not replace_text:
+        return
+
+    view.replace(edit, conflict_region, replace_text)
 
 
 class FindNextConflict(sublime_plugin.TextCommand):
-
     def run(self, edit):
         conflict_region = findConflict(self.view)
         if conflict_region is None:
@@ -53,21 +74,14 @@ class FindNextConflict(sublime_plugin.TextCommand):
 
 class KeepNew(sublime_plugin.TextCommand):
     def run(self, edit):
-        conflict_region = findConflict(self.view)
-
-        if conflict_region is None:
-            return
-
-        replace_text = keep(self.view, conflict_region, old=False)
-        self.view.replace(edit, conflict_region, replace_text)
+        resolveConflict(self.view, edit, NEW)
 
 
 class KeepOld(sublime_plugin.TextCommand):
     def run(self, edit):
-        conflict_region = findConflict(self.view)
+        resolveConflict(self.view, edit, OLD)
 
-        if conflict_region is None:
-            return
 
-        replace_text = keep(self.view, conflict_region, old=True)
-        self.view.replace(edit, conflict_region, replace_text)
+class KeepCommonAncestor(sublime_plugin.TextCommand):
+    def run(self, edit):
+        resolveConflict(self.view, edit, ANCESTOR)
