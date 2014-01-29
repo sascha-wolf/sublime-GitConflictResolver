@@ -5,10 +5,7 @@ sentinel = object()
 
 # view.find sadly can't handle naming groups
 NO_NAMING_GROUPS_PATTERN = "(?s)<{7}[^\n]*\n(.*?)(?:\|{7}[^\n]*\n(.*?))?={7}\n(.*?)>{7}[^\n]*\n"
-CONFLICT_REGEX = re.compile(r"(?s)<{7}[^\n]*\n(?P<old>.*?)(?:\|{7}[^\n]*\n(?P<ancestor>.*?))?={7}\n(?P<new>.*?)>{7}[^\n]*\n")
-OLD = 'old'
-NEW = 'new'
-ANCESTOR = 'ancestor'
+CONFLICT_REGEX = re.compile(r"(?s)<{7}[^\n]*\n(?P<ours>.*?)(?:\|{7}[^\n]*\n(?P<ancestor>.*?))?={7}\n(?P<theirs>.*?)>{7}[^\n]*\n")
 
 messages = {
     "no_conflict_found": "No conflict found",
@@ -34,30 +31,16 @@ def findConflict(view, begin=sentinel):
     return conflict_region
 
 
-def keep(view, region, keep_type):
+def extract(view, region, keep):
     conflict_text = view.substr(region)
     match = CONFLICT_REGEX.search(conflict_text)
 
     # If we didn't matched the group return None
-    if not match.group(keep_type):
+    if not match.group(keep):
         sublime.status_message(messages['no_such_group'])
         return None
 
-    return CONFLICT_REGEX.sub(r'\g<'+keep_type+'>', conflict_text)
-
-
-def resolveConflict(view, edit, keep_type):
-    conflict_region = findConflict(view)
-
-    if conflict_region is None:
-        return
-
-    replace_text = keep(view, conflict_region, NEW)
-
-    if not replace_text:
-        return
-
-    view.replace(edit, conflict_region, replace_text)
+    return CONFLICT_REGEX.sub(r'\g<'+keep+'>', conflict_text)
 
 
 class FindNextConflict(sublime_plugin.TextCommand):
@@ -72,16 +55,16 @@ class FindNextConflict(sublime_plugin.TextCommand):
         self.view.sel().add(conflict_region)
 
 
-class KeepNew(sublime_plugin.TextCommand):
-    def run(self, edit):
-        resolveConflict(self.view, edit, NEW)
+class Keep(sublime_plugin.TextCommand):
+    def run(self, edit, keep):
+        conflict_region = findConflict(self.view)
 
+        if conflict_region is None:
+            return
 
-class KeepOld(sublime_plugin.TextCommand):
-    def run(self, edit):
-        resolveConflict(self.view, edit, OLD)
+        replace_text = extract(self.view, conflict_region, keep)
 
+        if not replace_text:
+            return
 
-class KeepCommonAncestor(sublime_plugin.TextCommand):
-    def run(self, edit):
-        resolveConflict(self.view, edit, ANCESTOR)
+        self.view.replace(edit, conflict_region, replace_text)

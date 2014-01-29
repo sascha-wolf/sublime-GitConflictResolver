@@ -15,6 +15,6 @@ The plugin always consideres the first block as the old block while the second r
 There are no default shortcuts, to add them open your user keybindings file and add a keybinding like the following:
 
     { "keys": ["ctrl+alt+f"], "command": "find_next_conflict" },
-    { "keys": ["ctrl+alt+o"], "command": "keep_old" },
-    { "keys": ["ctrl+alt+n"], "command": "keep_new" },
-    { "keys": ["ctrl+alt+a"], "command": "keep_common_ancestor" }
+    { "keys": ["ctrl+alt+o"], "command": "keep_ours", "args": { "keep": "ours" } },
+    { "keys": ["ctrl+alt+t"], "command": "keep_theirs", "args": { "keep": "theirs" } },
+    { "keys": ["ctrl+alt+a"], "command": "keep_ancestor", "args": { "keep": "ancestor" } }

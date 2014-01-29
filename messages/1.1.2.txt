@@ -1,3 +1,6 @@
+Changes in 1.1.2
+====================
+
 Add a new command `Keep Common Ancestor` which is especially designed for the `diff3` conflict type in Git.
 
 A little example from the Git documentation:

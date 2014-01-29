@@ -4,15 +4,24 @@
         "command": "find_next_conflict"
     },
     {
-        "caption": "Git Conflict Resolver: Keep New",
-        "command": "keep_new"
+        "caption": "Git Conflict Resolver: Keep Theirs",
+        "command": "keep",
+        "args": {
+            "keep": "theirs"
+        }
     },
     {
-        "caption": "Git Conflict Resolver: Keep Old",
-        "command": "keep_old"
+        "caption": "Git Conflict Resolver: Keep Ours",
+        "command": "keep",
+        "args": {
+            "keep": "ours"
+        }
     },
     {
         "caption": "Git Conflict Resolver: Keep Common Ancestor",
-        "command": "keep_common_ancestor"
+        "command": "keep",
+        "args": {
+            "keep": "ancestor"
+        }
     }
 ]
