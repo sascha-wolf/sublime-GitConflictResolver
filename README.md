@@ -10,11 +10,11 @@ Git Conflict Resolver ships with four commands: `Find Next Conflict`, `Keep Ours
 
 All of them are pretty self explaining. The `Keep Common Ancestor` is especially interesting for the diff3 conflict type.
 
-The plugin always consideres the first block as the old block while the second represents the new one.
+The first block always represents `our` while the last block is always `theirs`.
 
 There are no default shortcuts, to add them open your user keybindings file and add a keybinding like the following:
 
     { "keys": ["ctrl+alt+f"], "command": "find_next_conflict" },
-    { "keys": ["ctrl+alt+o"], "command": "keep_ours", "args": { "keep": "ours" } },
-    { "keys": ["ctrl+alt+t"], "command": "keep_theirs", "args": { "keep": "theirs" } },
-    { "keys": ["ctrl+alt+a"], "command": "keep_ancestor", "args": { "keep": "ancestor" } }
+    { "keys": ["ctrl+alt+o"], "command": "keep", "args": { "keep": "ours" } },
+    { "keys": ["ctrl+alt+t"], "command": "keep", "args": { "keep": "theirs" } },
+    { "keys": ["ctrl+alt+a"], "command": "keep", "args": { "keep": "ancestor" } }
