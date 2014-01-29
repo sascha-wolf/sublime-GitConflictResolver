@@ -15,6 +15,6 @@ The first block always represents `our` while the last block is always `theirs`.
 There are no default shortcuts, to add them open your user keybindings file and add a keybinding like the following:
 
     { "keys": ["ctrl+alt+f"], "command": "find_next_conflict" },
-    { "keys": ["ctrl+alt+o"], "command": "keep_ours", "args": { "keep": "ours" } },
-    { "keys": ["ctrl+alt+t"], "command": "keep_theirs", "args": { "keep": "theirs" } },
-    { "keys": ["ctrl+alt+a"], "command": "keep_ancestor", "args": { "keep": "ancestor" } }
+    { "keys": ["ctrl+alt+o"], "command": "keep", "args": { "keep": "ours" } },
+    { "keys": ["ctrl+alt+t"], "command": "keep", "args": { "keep": "theirs" } },
+    { "keys": ["ctrl+alt+a"], "command": "keep", "args": { "keep": "ancestor" } }
