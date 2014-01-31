@@ -1,0 +1,30 @@
+Changes in 1.2.0
+====================
+
+Added live matching support!
+
+To disable and configure this feature you can use a GitConflictResolver.sublime-settings file in your user directory.
+
+Look at the default file for the details of the different settings:
+
+{
+	// Enable or disable the live matching of conflict areas
+	// By default the plugin matches live
+	"live_matching": true,
+
+	// The color of the highlighting is called "scope" in Sublime Text,
+	// to change this color you can choose a different scope.
+	// This customization isn't easy, since you have to define your own
+	// own scope in your theme file.
+	"matching_scope": "invalid",
+
+	// This option enables the filling the conflict area with a color
+	// By default the area will just be outlined
+	"fill_conflict_area": false,
+
+	// This option enables the outline of the conflict area
+	// By default the area will just be outlined
+	"outline_conflict_area": true
+}
+
+Enjoy!
