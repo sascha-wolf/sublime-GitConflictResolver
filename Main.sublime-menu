@@ -1,0 +1,95 @@
+[
+    {
+        "id": "preferences",
+        "children":
+        [
+            {
+                "caption": "Package Settings",
+                "mnemonic": "P",
+                "id": "package-settings",
+                "children":
+                [
+                    {
+                        "caption": "Git Conflict Resolver",
+                        "children":
+                        [
+                            {
+                                "command": "open_file",
+                                "args": {
+                                    "file": "${packages}/Git Conflict Resolver/README.md",
+                                    "platform": "Windows"
+                                },
+                                "caption": "Help"
+                            },
+                            {
+                                "command": "open_file",
+                                "args": {
+                                    "file": "${packages}/Git Conflict Resolver/README.md",
+                                    "platform": "OSX"
+                                },
+                                "caption": "Help"
+                            },
+                            {
+                                "command": "open_file",
+                                "args": {
+                                    "file": "${packages}/Git Conflict Resolver/README.md",
+                                    "platform": "Linux"
+                                },
+                                "caption": "Help"
+                            },
+                            { "caption": "-" },
+                            {
+                                "command": "open_file",
+                                "args": {
+                                    "file": "${packages}/Git Conflict Resolver/GitConflictResolver.sublime-settings",
+                                    "platform": "Windows"
+                                },
+                                "caption": "Settings - Default"
+                            },
+                            {
+                                "command": "open_file",
+                                "args": {
+                                    "file": "${packages}/Git Conflict Resolver/GitConflictResolver.sublime-settings",
+                                    "platform": "OSX"
+                                },
+                                "caption": "Settings - Default"
+                            },
+                            {
+                                "command": "open_file",
+                                "args": {
+                                    "file": "${packages}/Git Conflict Resolver/GitConflictResolver.sublime-settings",
+                                    "platform": "Linux"
+                                },
+                                "caption": "Settings - Default"
+                            },
+                            {
+                                "command": "open_file",
+                                "args": {
+                                    "file": "${packages}/User/GitConflictResolver.sublime-settings",
+                                    "platform": "Windows"
+                                },
+                                "caption": "Settings - User"
+                            },
+                            {
+                                "command": "open_file",
+                                "args": {
+                                    "file": "${packages}/User/GitConflictResolver.sublime-settings",
+                                    "platform": "OSX"
+                                },
+                                "caption": "Settings - User"
+                            },
+                            {
+                                "command": "open_file",
+                                "args": {
+                                    "file": "${packages}/User/GitConflictResolver.sublime-settings",
+                                    "platform": "Linux"
+                                },
+                                "caption": "Settings - User"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+]

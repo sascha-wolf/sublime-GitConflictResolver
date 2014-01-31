@@ -12,6 +12,20 @@ messages = {
     "no_such_group": "No such conflict group found"
 }
 
+# Global settings
+settings_file = "GitConflictResolver.sublime-settings"
+
+
+def plugin_loaded():
+    global settings, live_matching, matching_scope
+    global fill_conflict_area, outline_conflict_area
+
+    settings = sublime.load_settings(settings_file)
+    live_matching = bool(settings.get('live_matching', True))
+    matching_scope = settings.get('matching_scope', 'invalid')
+    fill_conflict_area = settings.get('fill_conflict_area', False)
+    outline_conflict_area = settings.get('outline_conflict_area', True)
+
 
 def findConflict(view, begin=sentinel):
     if begin is sentinel:
@@ -29,6 +43,20 @@ def findConflict(view, begin=sentinel):
             return None
 
     return conflict_region
+
+
+def highlightConflicts(view):
+    conflict_regions = view.find_all(NO_NAMING_GROUPS_PATTERN)
+
+    view.erase_regions("GitConflictRegions")
+    view.add_regions("GitConflictRegions",
+        conflict_regions,
+        matching_scope,
+        "",
+        (0 if fill_conflict_area else sublime.DRAW_NO_FILL)
+        |
+        (0 if outline_conflict_area else sublime.DRAW_NO_OUTLINE)
+        )
 
 
 def extract(view, region, keep):
@@ -50,7 +78,7 @@ class FindNextConflict(sublime_plugin.TextCommand):
             return
 
         # Add the region to the selection
-        self.view.show(conflict_region)
+        self.view.show_at_center(conflict_region)
         self.view.sel().clear()
         self.view.sel().add(conflict_region)
 
@@ -68,3 +96,19 @@ class Keep(sublime_plugin.TextCommand):
             return
 
         self.view.replace(edit, conflict_region, replace_text)
+
+
+class ScanForConflicts(sublime_plugin.EventListener):
+    def on_activated(self, view):
+        if(live_matching):
+            highlightConflicts(view)
+
+    def on_pre_save(self, view):
+        if(live_matching):
+            highlightConflicts(view)
+
+
+# ST3 automatically calls plugin_loaded when the API is ready
+# For ST2 we have to call the function manually
+if not int(sublime.version()) > 3000:
+    plugin_loaded()
