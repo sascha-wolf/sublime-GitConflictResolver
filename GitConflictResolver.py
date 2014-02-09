@@ -4,8 +4,15 @@ import re
 sentinel = object()
 
 # view.find sadly can't handle naming groups
-NO_NAMING_GROUPS_PATTERN = "(?s)<{7}[^\n]*\n(.*?)(?:\|{7}[^\n]*\n(.*?))?={7}\n(.*?)>{7}[^\n]*\n"
+NO_NAMING_GROUPS_PATTERN = r"(?s)<{7}[^\n]*\n(.*?)(?:\|{7}[^\n]*\n(.*?))?={7}\n(.*?)>{7}[^\n]*\n"
 CONFLICT_REGEX = re.compile(r"(?s)<{7}[^\n]*\n(?P<ours>.*?)(?:\|{7}[^\n]*\n(?P<ancestor>.*?))?={7}\n(?P<theirs>.*?)>{7}[^\n]*\n")
+
+# group patterns; this patterns always match the seperating lines too, so we have to remove then later from the matched regions
+CONFLICT_GROUP_REGEX = {
+    "ours": r"(?s)<{7}[^\n]*\n.*?\|{7}|>{7}",
+    "ancestor": r"(?s)\|{7}[^\n]*\n.*?={7}",
+    "theirs": r"(?s)={7}[^\n]*\n.*?>{7}"
+}
 
 messages = {
     "no_conflict_found": "No conflict found",
@@ -84,6 +91,21 @@ def findConflict(view, begin=sentinel):
     return conflict_region
 
 
+def highlightConflictGroup(view, group):
+    scope = group+'_scope'
+    if settings[scope] is not False or settings[scope] == 'none':
+        conflict_regions = view.find_all(NO_NAMING_GROUPS_PATTERN)
+
+        view.erase_regions("GitConflictRegion_"+group)
+        view.add_regions(
+            "GitConflictRegions_"+group,
+            conflict_regions,
+            settings[scope],
+            "",
+            sublime.DRAW_NO_OUTLINE
+        )
+
+
 def highlightConflicts(view):
     conflict_regions = view.find_all(NO_NAMING_GROUPS_PATTERN)
 
@@ -97,6 +119,10 @@ def highlightConflicts(view):
         |
         (0 if settings.outline_conflict_area else sublime.DRAW_NO_OUTLINE)
     )
+
+    highlightConflictGroup(view, 'ours')
+    highlightConflictGroup(view, 'ancestor')
+    highlightConflictGroup(view, 'theirs')
 
 
 def extract(view, region, keep):
