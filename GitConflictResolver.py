@@ -14,17 +14,56 @@ messages = {
 
 # Global settings
 settings_file = "GitConflictResolver.sublime-settings"
+settings = {}
+default_settings = {
+    "live_matching": True,
+    "matching_scope": 'invalid',
+    "fill_conflict_area": False,
+    "outline_conflict_area": True,
+    "ours_scope": 'warning',
+    "ancestor_scope": 'warning',
+    "theirs_scope": 'warning'
+}
 
 
 def plugin_loaded():
-    global settings, live_matching, matching_scope
-    global fill_conflict_area, outline_conflict_area
+    global subl_settings
 
-    settings = sublime.load_settings(settings_file)
-    live_matching = bool(settings.get('live_matching', True))
-    matching_scope = settings.get('matching_scope', 'invalid')
-    fill_conflict_area = settings.get('fill_conflict_area', False)
-    outline_conflict_area = settings.get('outline_conflict_area', True)
+    subl_settings = sublime.load_settings(settings_file)
+
+    # Live matching
+    settings.live_matching = subl_settings.get(
+        'live_matching',
+        default_settings['live_matching']
+    )
+    # Matching scope
+    settings.matching_scope = subl_settings.get(
+        'matching_scope',
+        default_settings['matching_scope']
+    )
+    # Fill conflict area
+    settings.fill_conflict_area = subl_settings.get(
+        'fill_conflict_area',
+        default_settings['fill_conflict_area']
+    )
+    # Outline conflict area
+    settings.outline_conflict_area = subl_settings.get(
+        'outline_conflict_area',
+        default_settings['outline_conflict_area']
+    )
+    # Conflict group scopes
+    settings.ours_scope = subl_settings.get(
+        'ours_scope',
+        default_settings['ours_scope']
+    )
+    settings.ancestor_scope = subl_settings.get(
+        'ancestor_scope',
+        default_settings['ancestor_scope']
+    )
+    settings.theirs_scope = subl_settings.get(
+        'theirs_scope',
+        default_settings['theirs_scope']
+    )
 
 
 def findConflict(view, begin=sentinel):
@@ -49,14 +88,15 @@ def highlightConflicts(view):
     conflict_regions = view.find_all(NO_NAMING_GROUPS_PATTERN)
 
     view.erase_regions("GitConflictRegions")
-    view.add_regions("GitConflictRegions",
+    view.add_regions(
+        "GitConflictRegions",
         conflict_regions,
-        matching_scope,
+        settings.matching_scope,
         "",
-        (0 if fill_conflict_area else sublime.DRAW_NO_FILL)
+        (0 if settings.fill_conflict_area else sublime.DRAW_NO_FILL)
         |
-        (0 if outline_conflict_area else sublime.DRAW_NO_OUTLINE)
-        )
+        (0 if settings.outline_conflict_area else sublime.DRAW_NO_OUTLINE)
+    )
 
 
 def extract(view, region, keep):
@@ -100,11 +140,11 @@ class Keep(sublime_plugin.TextCommand):
 
 class ScanForConflicts(sublime_plugin.EventListener):
     def on_activated(self, view):
-        if(live_matching):
+        if(settings.live_matching):
             highlightConflicts(view)
 
     def on_pre_save(self, view):
-        if(live_matching):
+        if(settings.live_matching):
             highlightConflicts(view)
 
 
