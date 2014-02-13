@@ -15,6 +15,43 @@ This command is especially useful for the diff3 conflict type of Git. If have no
 Some clarification:
 The first block always represents `our` while the last block is always `theirs`.
 
+Configuration
+-------------
+
+To configure the plugin you can use a user-settings file in your user folder. You can easily access this file other `Preferences` -> `Git Conflict Resolver` -> `Settings - User`.
+
+For information on which settings are available take a look at the commented default-settings file:
+
+```js
+{
+    // Enable or disable the live matching of conflict areas
+    // By default the plugin matches live
+    "live_matching": true,
+
+    // The color of the highlighting is called "scope" in Sublime Text,
+    // to change this color you can choose a different scope.
+    // This customization isn't easy, since you have to define your own
+    // own scope in your theme file.
+    "matching_scope": "invalid",
+
+    // This option enables the filling the conflict area with a color
+    // By default the area will just be outlined
+    "fill_conflict_area": false,
+
+    // This option enables the outline of the conflict area
+    // By default the area will just be outlined
+    "outline_conflict_area": true,
+
+    // This options enable the gutter marks for the different conflict groups
+    "ours_gutter": true,
+    "theirs_gutter": true,
+    "ancestor_gutter": true
+}
+```
+
+Shortcuts
+---------
+
 There are no default shortcuts, to add them open your user keybindings file and add a keybinding like the following:
 
     { "keys": ["ctrl+alt+f"], "command": "find_next_conflict" },
