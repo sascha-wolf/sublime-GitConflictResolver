@@ -1,0 +1,23 @@
+Changes in 1.3.0
+================
+
+Added live gutter marks for the conflict groups!
+
+You will now be able to easily distinguish the different groups (ours, theirs, common ancestor):
+
+* `Ours` left arrow
+* `Theirs` right arrow
+* `Common ancestor` minus
+
+As usual you can disable this feature via the settings-file:
+
+{
+	...
+
+	// This options enable the gutter marks for the different conflict groups
+	"ours_gutter": true,
+	"theirs_gutter": true,
+	"ancestor_gutter": true
+}
+
+Enjoy!

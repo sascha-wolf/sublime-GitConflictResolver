@@ -4,8 +4,21 @@ import re
 sentinel = object()
 
 # view.find sadly can't handle naming groups
-NO_NAMING_GROUPS_PATTERN = "(?s)<{7}[^\n]*\n(.*?)(?:\|{7}[^\n]*\n(.*?))?={7}\n(.*?)>{7}[^\n]*\n"
+NO_NAMING_GROUPS_PATTERN = r"(?s)<{7}[^\n]*\n(.*?)(?:\|{7}[^\n]*\n(.*?))?={7}\n(.*?)>{7}[^\n]*\n"
 CONFLICT_REGEX = re.compile(r"(?s)<{7}[^\n]*\n(?P<ours>.*?)(?:\|{7}[^\n]*\n(?P<ancestor>.*?))?={7}\n(?P<theirs>.*?)>{7}[^\n]*\n")
+
+# group patterns; this patterns always match the seperating lines too, so we have to remove then later from the matched regions
+CONFLICT_GROUP_REGEX = {
+    "ours": r"(?s)<{7}[^\n]*\n.*?\|{7}|>{7}",
+    "ancestor": r"(?s)\|{7}[^\n]*\n.*?={7}",
+    "theirs": r"(?s)={7}[^\n]*\n.*?>{7}"
+}
+
+icons = {
+    "ours": "Packages/Git Conflict Resolver/gutter/ours.png",
+    "ancestor": "Packages/Git Conflict Resolver/gutter/ancestor.png",
+    "theirs": "Packages/Git Conflict Resolver/gutter/theirs.png"
+}
 
 messages = {
     "no_conflict_found": "No conflict found",
@@ -14,17 +27,56 @@ messages = {
 
 # Global settings
 settings_file = "GitConflictResolver.sublime-settings"
+settings = {}
+default_settings = {
+    "live_matching": True,
+    "matching_scope": 'invalid',
+    "fill_conflict_area": False,
+    "outline_conflict_area": True,
+    "ours_gutter": True,
+    "ancestor_gutter": True,
+    "theirs_gutter": True
+}
 
 
 def plugin_loaded():
-    global settings, live_matching, matching_scope
-    global fill_conflict_area, outline_conflict_area
+    global subl_settings, settings
 
-    settings = sublime.load_settings(settings_file)
-    live_matching = bool(settings.get('live_matching', True))
-    matching_scope = settings.get('matching_scope', 'invalid')
-    fill_conflict_area = settings.get('fill_conflict_area', False)
-    outline_conflict_area = settings.get('outline_conflict_area', True)
+    subl_settings = sublime.load_settings(settings_file)
+
+    # Live matching
+    settings['live_matching'] = subl_settings.get(
+        'live_matching',
+        default_settings['live_matching']
+    )
+    # Matching scope
+    settings['matching_scope'] = subl_settings.get(
+        'matching_scope',
+        default_settings['matching_scope']
+    )
+    # Fill conflict area
+    settings['fill_conflict_area'] = subl_settings.get(
+        'fill_conflict_area',
+        default_settings['fill_conflict_area']
+    )
+    # Outline conflict area
+    settings['outline_conflict_area'] = subl_settings.get(
+        'outline_conflict_area',
+        default_settings['outline_conflict_area']
+    )
+    # Conflict group highlighting
+    settings['ours_gutter'] = subl_settings.get(
+        'ours_gutter',
+        default_settings['ours_gutter']
+    )
+    settings['ancestor_gutter'] = subl_settings.get(
+        'ancestor_gutter',
+        default_settings['ancestor_gutter']
+    )
+    settings['theirs_gutter'] = subl_settings.get(
+        'theirs_gutter',
+        default_settings['theirs_gutter']
+    )
 
 
 def findConflict(view, begin=sentinel):
@@ -45,18 +97,64 @@ def findConflict(view, begin=sentinel):
     return conflict_region
 
 
+def joinRegions(regions):
+    if not regions:
+        return sublime.Region(-1, -1)
+
+    begin = min([region.begin() for region in regions if region.begin() >= 0])
+    end = max([region.end() for region in regions])
+
+    return sublime.Region(begin, end)
+
+
+def highlightConflictGroup(view, group):
+    scope = group+'_gutter'
+    if settings[scope]:
+        conflict_regions = view.find_all(CONFLICT_GROUP_REGEX[group])
+
+        if not conflict_regions:
+            return
+
+        # Remove the first and last line since they just contain the seperators
+        highlight_regions = []
+        for region in conflict_regions:
+            region = view.split_by_newlines(region)[1:-1]
+            # Ignore empty subregions
+            if not region:
+                continue
+
+            for subregion in region:
+                highlight_regions.append(subregion)
+
+        view.erase_regions("GitConflictRegion_"+group)
+        view.add_regions(
+            "GitConflictRegions_"+group,
+            highlight_regions,
+            "warning",
+            icons[group],
+            sublime.DRAW_NO_FILL |
+            sublime.DRAW_NO_OUTLINE |
+            sublime.HIDE_ON_MINIMAP
+        )
+
+
 def highlightConflicts(view):
     conflict_regions = view.find_all(NO_NAMING_GROUPS_PATTERN)
 
     view.erase_regions("GitConflictRegions")
-    view.add_regions("GitConflictRegions",
+    view.add_regions(
+        "GitConflictRegions",
         conflict_regions,
-        matching_scope,
+        settings['matching_scope'],
         "",
-        (0 if fill_conflict_area else sublime.DRAW_NO_FILL)
+        (0 if settings['fill_conflict_area'] else sublime.DRAW_NO_FILL)
         |
-        (0 if outline_conflict_area else sublime.DRAW_NO_OUTLINE)
-        )
+        (0 if settings['outline_conflict_area'] else sublime.DRAW_NO_OUTLINE)
+    )
+
+    highlightConflictGroup(view, 'ours')
+    highlightConflictGroup(view, 'ancestor')
+    highlightConflictGroup(view, 'theirs')
 
 
 def extract(view, region, keep):
@@ -100,11 +198,11 @@ class Keep(sublime_plugin.TextCommand):
 
 class ScanForConflicts(sublime_plugin.EventListener):
     def on_activated(self, view):
-        if(live_matching):
+        if(settings['live_matching']):
             highlightConflicts(view)
 
     def on_pre_save(self, view):
-        if(live_matching):
+        if(settings['live_matching']):
             highlightConflicts(view)
 
 
