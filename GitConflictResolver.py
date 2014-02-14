@@ -108,10 +108,8 @@ def joinRegions(regions):
 
 
 def highlightConflictGroup(view, group):
-    # Always remove the regions
-    view.erase_regions("GitConflictRegions_"+group)
-
-    if settings[group+'_gutter']:
+    scope = group+'_gutter'
+    if settings[scope]:
         conflict_regions = view.find_all(CONFLICT_GROUP_REGEX[group])
 
         if not conflict_regions:
@@ -128,6 +126,7 @@ def highlightConflictGroup(view, group):
             for subregion in region:
                 highlight_regions.append(subregion)
 
+        view.erase_regions("GitConflictRegion_"+group)
         view.add_regions(
             "GitConflictRegions_"+group,
             highlight_regions,
@@ -192,7 +191,7 @@ class Keep(sublime_plugin.TextCommand):
         replace_text = extract(self.view, conflict_region, keep)
 
         if not replace_text:
-            return
+            replace_text = ""
 
         self.view.replace(edit, conflict_region, replace_text)
 
