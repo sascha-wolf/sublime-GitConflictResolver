@@ -108,8 +108,10 @@ def joinRegions(regions):
 
 
 def highlightConflictGroup(view, group):
-    scope = group+'_gutter'
-    if settings[scope]:
+    # Always remove the regions
+    view.erase_regions("GitConflictRegions_"+group)
+
+    if settings[group+'_gutter']:
         conflict_regions = view.find_all(CONFLICT_GROUP_REGEX[group])
 
         if not conflict_regions:
@@ -126,7 +128,6 @@ def highlightConflictGroup(view, group):
             for subregion in region:
                 highlight_regions.append(subregion)
 
-        view.erase_regions("GitConflictRegion_"+group)
         view.add_regions(
             "GitConflictRegions_"+group,
             highlight_regions,
