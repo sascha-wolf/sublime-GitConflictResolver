@@ -198,11 +198,11 @@ class Keep(sublime_plugin.TextCommand):
 
 class ScanForConflicts(sublime_plugin.EventListener):
     def on_activated(self, view):
-        if(settings['live_matching']):
+        if settings['live_matching']:
             highlightConflicts(view)
 
     def on_pre_save(self, view):
-        if(settings['live_matching']):
+        if settings['live_matching']:
             highlightConflicts(view)
 
 
