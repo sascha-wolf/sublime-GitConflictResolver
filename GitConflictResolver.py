@@ -84,7 +84,7 @@ def findConflict(view, begin=sentinel):
         if len(view.sel()) == 0:
             begin = 0
         else:
-            begin = view.sel()[0].begin()
+            begin = view.sel()[1].begin()
 
     conflict_region = view.find(NO_NAMING_GROUPS_PATTERN, begin)
 
