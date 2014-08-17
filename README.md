@@ -67,4 +67,5 @@ There are no default shortcuts, to add them open your user keybindings file and 
     { "keys": ["ctrl+alt+f"], "command": "find_next_conflict" },
     { "keys": ["ctrl+alt+o"], "command": "keep", "args": { "keep": "ours" } },
     { "keys": ["ctrl+alt+t"], "command": "keep", "args": { "keep": "theirs" } },
-    { "keys": ["ctrl+alt+a"], "command": "keep", "args": { "keep": "ancestor" } }
+    { "keys": ["ctrl+alt+a"], "command": "keep", "args": { "keep": "ancestor" } },
+    { "keys": ["ctrl+alt+c"], "command": "list_conflict_files" }
