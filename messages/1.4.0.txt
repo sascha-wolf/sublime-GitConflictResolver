@@ -1,0 +1,22 @@
+Changes in 1.4.0
+================
+
+Features
+--------
+
+Added a "Show Conflict Files" feature.
+
+In case of conflicts in your repository you can use this feature to list all files containing conflicts; this enables you to quickly find relevant files to fix the conflicts and continue with your work.
+
+Since this functionality uses git to find any conflicts in your repository Git Conflict Resolver now needs to know where to find your git executable.
+In the case you don't have git in your path you can use the "git_path" setting to tell the plugin where to find git.
+
+By default "Show Conflict Files" only displays the filename without any path segments (so "src/main.js" will become "main.js"), you can disable this behaviour with the "show_only_filenames" setting.
+
+Bugfixes
+--------
+
+- Using "Find Next Conflict" multiple times will jump to the next conflict instead of always finding the first conflict in the file
+- Trying to pick an empty block in a conflict (speaks deletions) will work as expected and remove the whole conflict instead of doing nothing
+
+Enjoy!

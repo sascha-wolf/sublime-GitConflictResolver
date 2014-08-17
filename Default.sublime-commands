@@ -23,5 +23,9 @@
         "args": {
             "keep": "ancestor"
         }
+    },
+    {
+        "caption": "Git Conflict Resolver: Show Conflict Files",
+        "command": "list_conflict_files"
     }
 ]

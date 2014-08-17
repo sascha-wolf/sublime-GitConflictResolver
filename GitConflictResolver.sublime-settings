@@ -1,4 +1,8 @@
 {
+	// The git path
+	// by default the plugin assumes that git is in your path
+	"git_path": "git",
+
 	// Enable or disable the live matching of conflict areas
 	// By default the plugin matches live
 	"live_matching": true,
@@ -15,5 +19,16 @@
 
 	// This option enables the outline of the conflict area
 	// By default the area will just be outlined
-	"outline_conflict_area": true
+	"outline_conflict_area": true,
+
+    // This options enable the gutter marks for the different conflict groups
+    "ours_gutter": true,
+    "theirs_gutter": true,
+    "ancestor_gutter": true,
+
+    // This option changes the display of the "Show Conflict Files" functionality"
+    // true: Show only the filesnames ("src/main.js" becomes "main.js")
+    // false: Show relative path (from the root of the repository)
+    // By default Git Conflict Resolver only shows the filename
+    "show_only_filename": true
 }

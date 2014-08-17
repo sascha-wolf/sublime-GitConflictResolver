@@ -1,13 +1,23 @@
-import sublime_plugin, sublime
+import sublime
+import sublime_plugin
 import re
+# from subprocess import call
+import subprocess
 
 sentinel = object()
 
 # view.find sadly can't handle naming groups
-NO_NAMING_GROUPS_PATTERN = r"(?s)<{7}[^\n]*\n(.*?)(?:\|{7}[^\n]*\n(.*?))?={7}\n(.*?)>{7}[^\n]*\n"
-CONFLICT_REGEX = re.compile(r"(?s)<{7}[^\n]*\n(?P<ours>.*?)(?:\|{7}[^\n]*\n(?P<ancestor>.*?))?={7}\n(?P<theirs>.*?)>{7}[^\n]*\n")
+NO_NAMING_GROUPS_PATTERN = r"(?s)<{7}[^\n]*\n"\
+                            "(.*?)(?:\|{7}[^\n]*\n"\
+                            "(.*?))?={7}\n(.*?)>{7}[^\n]*\n"
 
-# group patterns; this patterns always match the seperating lines too, so we have to remove then later from the matched regions
+CONFLICT_REGEX = re.compile(r"(?s)<{7}[^\n]*\n"
+                            "(?P<ours>.*?)(?:\|{7}[^\n]*\n"
+                            "(?P<ancestor>.*?))?={7}\n"
+                            "(?P<theirs>.*?)>{7}[^\n]*\n")
+
+# group patterns; this patterns always match the seperating lines too,
+# so we have to remove then later from the matched regions
 CONFLICT_GROUP_REGEX = {
     "ours": r"(?s)<{7}[^\n]*\n.*?\|{7}|>{7}",
     "ancestor": r"(?s)\|{7}[^\n]*\n.*?={7}",
@@ -22,7 +32,8 @@ icons = {
 
 messages = {
     "no_conflict_found": "No conflict found",
-    "no_such_group": "No such conflict group found"
+    "no_such_group": "No such conflict group found",
+    "open_all": "Open all ..."
 }
 
 # Global settings
@@ -35,7 +46,9 @@ default_settings = {
     "outline_conflict_area": True,
     "ours_gutter": True,
     "ancestor_gutter": True,
-    "theirs_gutter": True
+    "theirs_gutter": True,
+    "git_path": "git",
+    "show_only_filenames": True
 }
 
 
@@ -78,13 +91,25 @@ def plugin_loaded():
         default_settings['theirs_gutter']
     )
 
+    # Git Settings
+    settings['git_path'] = subl_settings.get(
+        'git_path',
+        default_settings['git_path']
+    )
 
-def findConflict(view, begin=sentinel):
+    # Remove everything except for the part from the filename
+    settings['show_only_filenames'] = subl_settings.get(
+        'show_only_filenames',
+        default_settings['show_only_filenames']
+    )
+
+
+def find_conflict(view, begin=sentinel):
     if begin is sentinel:
         if len(view.sel()) == 0:
             begin = 0
         else:
-            begin = view.sel()[0].begin()
+            begin = view.sel()[1].begin()
 
     conflict_region = view.find(NO_NAMING_GROUPS_PATTERN, begin)
 
@@ -97,7 +122,7 @@ def findConflict(view, begin=sentinel):
     return conflict_region
 
 
-def joinRegions(regions):
+def join_regions(regions):
     if not regions:
         return sublime.Region(-1, -1)
 
@@ -107,17 +132,15 @@ def joinRegions(regions):
     return sublime.Region(begin, end)
 
 
-def highlightConflictGroup(view, group):
-    # Always remove the regions
-    view.erase_regions("GitConflictRegions_"+group)
-
-    if settings[group+'_gutter']:
+def highlight_conflict_group(view, group):
+    scope = group + '_gutter'
+    if settings[scope]:
         conflict_regions = view.find_all(CONFLICT_GROUP_REGEX[group])
 
         if not conflict_regions:
             return
 
-        # Remove the first and last line since they just contain the seperators
+        # Remove the first and last line since they just contain the separators
         highlight_regions = []
         for region in conflict_regions:
             region = view.split_by_newlines(region)[1:-1]
@@ -128,8 +151,9 @@ def highlightConflictGroup(view, group):
             for subregion in region:
                 highlight_regions.append(subregion)
 
+        view.erase_regions("GitConflictRegion_" + group)
         view.add_regions(
-            "GitConflictRegions_"+group,
+            "GitConflictRegions_" + group,
             highlight_regions,
             "warning",
             icons[group],
@@ -139,7 +163,7 @@ def highlightConflictGroup(view, group):
         )
 
 
-def highlightConflicts(view):
+def highlight_conflicts(view):
     conflict_regions = view.find_all(NO_NAMING_GROUPS_PATTERN)
 
     view.erase_regions("GitConflictRegions")
@@ -153,9 +177,9 @@ def highlightConflicts(view):
         (0 if settings['outline_conflict_area'] else sublime.DRAW_NO_OUTLINE)
     )
 
-    highlightConflictGroup(view, 'ours')
-    highlightConflictGroup(view, 'ancestor')
-    highlightConflictGroup(view, 'theirs')
+    highlight_conflict_group(view, 'ours')
+    highlight_conflict_group(view, 'ancestor')
+    highlight_conflict_group(view, 'theirs')
 
 
 def extract(view, region, keep):
@@ -167,12 +191,12 @@ def extract(view, region, keep):
         sublime.status_message(messages['no_such_group'])
         return None
 
-    return CONFLICT_REGEX.sub(r'\g<'+keep+'>', conflict_text)
+    return CONFLICT_REGEX.sub(r'\g<' + keep + '>', conflict_text)
 
 
 class FindNextConflict(sublime_plugin.TextCommand):
     def run(self, edit):
-        conflict_region = findConflict(self.view)
+        conflict_region = find_conflict(self.view)
         if conflict_region is None:
             return
 
@@ -184,7 +208,7 @@ class FindNextConflict(sublime_plugin.TextCommand):
 
 class Keep(sublime_plugin.TextCommand):
     def run(self, edit, keep):
-        conflict_region = findConflict(self.view)
+        conflict_region = find_conflict(self.view)
 
         if conflict_region is None:
             return
@@ -192,19 +216,68 @@ class Keep(sublime_plugin.TextCommand):
         replace_text = extract(self.view, conflict_region, keep)
 
         if not replace_text:
-            return
+            replace_text = ""
 
         self.view.replace(edit, conflict_region, replace_text)
 
 
+class ListConflictFiles(sublime_plugin.WindowCommand):
+    def run(self):
+        window = self.window
+        conflict_files = subprocess.check_output([
+            settings['git_path'],
+            "diff", "--name-only",
+            "--diff-filter=U"
+        ])
+
+        if not conflict_files:
+            sublime.status_message(messages['no_conflict_found'])
+            return
+
+        conflict_files = conflict_files.decode('utf-8').split('\n')
+        # Remove empty strings and sort the list
+        # (TODO: sort also filenames only?)
+        conflict_files = sorted([x for x in conflict_files if x])
+
+        # Copy the list for representation
+        show_files = list(conflict_files)
+
+        if settings['show_only_filenames']:
+            only_filenames = []
+            for string in conflict_files:
+                only_filenames.append(string.rpartition('/')[2])
+
+            show_files = only_filenames
+
+        # Add an "Open all ..." option
+        show_files.insert(0, messages['open_all'])
+
+        # Show the conflict files in the quickpanel and open them on selection
+        def open_conflict(index):
+            if index < 0:
+                return
+            elif index == 0:
+                # Open all ...
+                for file in conflict_files:
+                    window.open_file(file)
+            else:
+                window.open_file(conflict_files[index - 1])
+
+        window.show_quick_panel(show_files, open_conflict)
+
+
 class ScanForConflicts(sublime_plugin.EventListener):
     def on_activated(self, view):
-        if(settings['live_matching']):
-            highlightConflicts(view)
+        if settings['live_matching']:
+            highlight_conflicts(view)
+
+    def on_load(self, view):
+        if settings['live_matching']:
+            highlight_conflicts(view)
 
     def on_pre_save(self, view):
-        if(settings['live_matching']):
-            highlightConflicts(view)
+        if settings['live_matching']:
+            highlight_conflicts(view)
 
 
 # ST3 automatically calls plugin_loaded when the API is ready

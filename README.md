@@ -6,10 +6,10 @@ A Sublime Text plugin to help you solve this nasty merge conflicts.
 Commands
 ---------
 
-Git Conflict Resolver ships with four commands: `Find Next Conflict`, `Keep Ours`, `Keep Theirs`, `Keep Common Ancestor`.
+Git Conflict Resolver ships with five commands: `Find Next Conflict`, `Keep Ours`, `Keep Theirs`, `Keep Common Ancestor` and `Show Conflict Files`.
 
 While most of them are pretty self explaining, the `Keep Common Ancestor` could need some elaboration:
-This command is especially useful for the diff3 conflict type of Git. If have no idea what I'm talking about then
+This command is especially useful for the diff3 conflict type of Git. If you have no idea what I'm talking about then
 [check it out](http://git-scm.com/docs/git-merge) it's great! (Just search for diff3 on the page)
 
 Some clarification:
@@ -24,6 +24,10 @@ For information on which settings are available take a look at the commented def
 
 ```js
 {
+    // The git path
+    // by default the plugin assumes that git is in your path
+    "git_path": "git",
+
     // Enable or disable the live matching of conflict areas
     // By default the plugin matches live
     "live_matching": true,
@@ -45,7 +49,13 @@ For information on which settings are available take a look at the commented def
     // This options enable the gutter marks for the different conflict groups
     "ours_gutter": true,
     "theirs_gutter": true,
-    "ancestor_gutter": true
+    "ancestor_gutter": true,
+
+    // This option changes the display of the "Show Conflict Files" functionality"
+    // true: Show only the filesnames ("src/main.js" becomes "main.js")
+    // false: Show relative path (from the root of the repository)
+    // By default Git Conflict Resolver only shows the filename
+    "show_only_filename": true
 }
 ```
 
