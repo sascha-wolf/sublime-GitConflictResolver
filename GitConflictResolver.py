@@ -224,11 +224,16 @@ class Keep(sublime_plugin.TextCommand):
 class ListConflictFiles(sublime_plugin.WindowCommand):
     def run(self):
         window = self.window
+
+        # Search for conflicts using git executable; hide console window
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         conflict_files = subprocess.check_output([
             settings['git_path'],
             "diff", "--name-only",
             "--diff-filter=U"
-        ])
+            ],
+            startupinfo=startupinfo)
 
         if not conflict_files:
             sublime.status_message(messages['no_conflict_found'])
