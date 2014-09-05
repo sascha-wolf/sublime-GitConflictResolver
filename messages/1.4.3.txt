@@ -1,0 +1,9 @@
+Changes in 1.4.2
+================
+
+Bugfixes
+--------
+
+- Ensure that "Keep Ours/Theirs/Common Ancestor" always replaces the selected conflict
+
+Enjoy!

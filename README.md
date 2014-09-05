@@ -18,7 +18,7 @@ The first block always represents `our` while the last block is always `theirs`.
 Configuration
 -------------
 
-To configure the plugin you can use a user-settings file in your user folder. You can easily access this file other `Preferences` -> `Git Conflict Resolver` -> `Settings - User`.
+To configure the plugin you can use a user-settings file in your user folder. You can easily access this file over `Preferences` -> `Git Conflict Resolver` -> `Settings - User`.
 
 For information on which settings are available take a look at the commented default-settings file:
 
@@ -35,7 +35,7 @@ For information on which settings are available take a look at the commented def
     // The color of the highlighting is called "scope" in Sublime Text,
     // to change this color you can choose a different scope.
     // This customization isn't easy, since you have to define your own
-    // own scope in your theme file.
+    // scope in your theme file.
     "matching_scope": "invalid",
 
     // This option enables the filling the conflict area with a color

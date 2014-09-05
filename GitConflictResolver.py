@@ -4,8 +4,6 @@ import re
 # from subprocess import call
 import subprocess
 
-sentinel = object()
-
 # view.find sadly can't handle naming groups
 NO_NAMING_GROUPS_PATTERN = r"(?s)<{7}[^\n]*\n"\
                             "(.*?)(?:\|{7}[^\n]*\n"\
@@ -104,13 +102,7 @@ def plugin_loaded():
     )
 
 
-def find_conflict(view, begin=sentinel):
-    if begin is sentinel:
-        if len(view.sel()) == 0:
-            begin = 0
-        else:
-            begin = view.sel()[-1].end()
-
+def find_conflict(view, begin=0):
     conflict_region = view.find(NO_NAMING_GROUPS_PATTERN, begin)
 
     if not conflict_region:
@@ -196,20 +188,33 @@ def extract(view, region, keep):
 
 class FindNextConflict(sublime_plugin.TextCommand):
     def run(self, edit):
-        conflict_region = find_conflict(self.view)
+        current_selection = self.view.sel()
+
+        # Use the end of the current selection for the search, or use 0 if nothing is selected
+        begin = 0
+        if len(current_selection) > 0:
+            begin = self.view.sel()[-1].end()
+
+        conflict_region = find_conflict(self.view, begin)
         if conflict_region is None:
             return
 
         # Add the region to the selection
         self.view.show_at_center(conflict_region)
-        self.view.sel().clear()
-        self.view.sel().add(conflict_region)
+        current_selection.clear()
+        current_selection.add(conflict_region)
 
 
 class Keep(sublime_plugin.TextCommand):
     def run(self, edit, keep):
-        conflict_region = find_conflict(self.view)
+        current_selection = self.view.sel()
 
+        # Use the begin of the current selection for the search, or use 0 if nothing is selected
+        begin = 0
+        if len(current_selection) > 0:
+            begin = current_selection[0].begin()
+
+        conflict_region = find_conflict(self.view, begin)
         if conflict_region is None:
             return
 
