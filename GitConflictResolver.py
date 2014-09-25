@@ -2,7 +2,6 @@ import sublime
 import sublime_plugin
 import os
 import re
-# from subprocess import call
 import subprocess
 
 # view.find sadly can't handle naming groups
@@ -230,10 +229,20 @@ class Keep(sublime_plugin.TextCommand):
 class ListConflictFiles(sublime_plugin.WindowCommand):
     def run(self):
         window = self.window
-        conflict_files = self._get_conflict_files()
+        working_dir = self._determine_working_dir()
+        conflict_files = None
+        try:
+            conflict_files = self._get_conflict_files(working_dir)
+        except subprocess.CalledProcessError:
+            # Git will execute with an error when the given directory
+            # is not a repository, so we can savely ignore the error
+            pass
 
         if not conflict_files:
-            sublime.status_message(messages['no_conflict_found'])
+            sublime.status_message(
+                messages['no_conflict_found'] +
+                ((" (" + working_dir + ")") if working_dir else "")
+            )
             return
 
         conflict_files = conflict_files.decode('utf-8').split('\n')
@@ -267,7 +276,7 @@ class ListConflictFiles(sublime_plugin.WindowCommand):
 
         window.show_quick_panel(show_files, open_conflict)
 
-    def _get_conflict_files(self):
+    def _get_conflict_files(self, working_dir):
         startupinfo = None
         # hide console window on windows
         if os.name == 'nt':
@@ -280,8 +289,24 @@ class ListConflictFiles(sublime_plugin.WindowCommand):
             "diff", "--name-only",
             "--diff-filter=U"
             ],
+            cwd=working_dir,
             startupinfo=startupinfo
         )
+
+    def _determine_working_dir(self):
+        open_views = self.window.views()
+        open_folders = self.window.folders()
+
+        working_dir = None
+        if open_views:
+            # Remove the traling filename, we just need the folder
+            working_dir = re.sub(r"/[^/]*$", "", open_views[0].file_name())
+        elif open_folders:
+            working_dir = open_folders[0]
+
+        print(open_views, open_folders, working_dir)
+
+        return working_dir
 
 
 class ScanForConflicts(sublime_plugin.EventListener):
