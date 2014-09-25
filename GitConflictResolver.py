@@ -1,5 +1,6 @@
 import sublime
 import sublime_plugin
+import os
 import re
 # from subprocess import call
 import subprocess
@@ -229,16 +230,7 @@ class Keep(sublime_plugin.TextCommand):
 class ListConflictFiles(sublime_plugin.WindowCommand):
     def run(self):
         window = self.window
-
-        # Search for conflicts using git executable; hide console window
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        conflict_files = subprocess.check_output([
-            settings['git_path'],
-            "diff", "--name-only",
-            "--diff-filter=U"
-            ],
-            startupinfo=startupinfo)
+        conflict_files = self._get_conflict_files()
 
         if not conflict_files:
             sublime.status_message(messages['no_conflict_found'])
@@ -274,6 +266,22 @@ class ListConflictFiles(sublime_plugin.WindowCommand):
                 window.open_file(conflict_files[index - 1])
 
         window.show_quick_panel(show_files, open_conflict)
+
+    def _get_conflict_files(self):
+        startupinfo = None
+        # hide console window on windows
+        if os.name == 'nt':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+        # Search for conflicts using git executable
+        return subprocess.check_output([
+            settings['git_path'],
+            "diff", "--name-only",
+            "--diff-filter=U"
+            ],
+            startupinfo=startupinfo
+        )
 
 
 class ScanForConflicts(sublime_plugin.EventListener):
