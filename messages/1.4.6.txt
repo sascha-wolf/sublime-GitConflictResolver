@@ -1,0 +1,17 @@
+Changes in 1.4.6
+================
+
+Bugfixes
+--------
+
+- "Show Conflict Files" now always opens the correct file, regardless of their location in the repository
+
+Enhancements
+------------
+
+- If the plugin can't find the git executable, it will inform the user with an error dialog how he can tell Git Conflict Resolver about the path
+- When running "Show Conflict Files" Git Conflict Resolver now tries to determine the git repository via the active view; if no view is opened, or the current view hasn't a file path, it uses the first opened folder to look for a repository
+  If no folder is found the plugin gives up (why did run the command in that case anyway?)
+- If the plugin is unable to find a git repository it will inform the user via the status bar
+
+Enjoy!
