@@ -248,6 +248,7 @@ class ListConflictFiles(sublime_plugin.WindowCommand):
         # Remove empty strings and sort the list
         # (TODO: sort also filenames only?)
         conflict_files = sorted([x for x in conflict_files if x])
+        full_path = [os.path.join(git_repo, x) for x in conflict_files]
 
         # Copy the list for representation
         show_files = list(conflict_files)
@@ -268,12 +269,10 @@ class ListConflictFiles(sublime_plugin.WindowCommand):
                 return
             elif index == 0:
                 # Open all ...
-                for file in conflict_files:
+                for file in full_path:
                     window.open_file(file)
             else:
-                window.open_file(
-                    os.path.join(git_repo, conflict_files[index - 1])
-                )
+                window.open_file(full_path[index - 1])
 
         window.show_quick_panel(show_files, open_conflict)
 
