@@ -322,9 +322,7 @@ class ListConflictFiles(sublime_plugin.WindowCommand):
         working_dir = None
         if open_view_path:
             # Remove the traling filename, we just need the folder
-            working_dir = re.sub(r"[/\\][^\\/]*$",
-                                 "",
-                                 open_view_path)
+            working_dir = os.path.dirname(open_view_path)
         elif open_folders:
             working_dir = open_folders[0]
 
