@@ -246,18 +246,16 @@ class ListConflictFiles(sublime_plugin.WindowCommand):
         load_settings()
 
         # Ensure git executable is available
-        if not self._git_executable_found():
+        if not self._git_executable_available():
             sublime.error_message(messages['git_executable_not_found'])
             return
 
-        window = self.window
         git_repo = self._determine_git_dir()
         if not git_repo:
             sublime.status_message(messages['no_git_repo_found'])
             return
 
         conflict_files = self._get_conflict_files(git_repo)
-
         if not conflict_files:
             sublime.status_message(
                 messages['no_conflict_found'] +
@@ -271,16 +269,7 @@ class ListConflictFiles(sublime_plugin.WindowCommand):
         conflict_files = sorted([x for x in conflict_files if x])
         full_path = [os.path.join(git_repo, x) for x in conflict_files]
 
-        # Copy the list for representation
-        show_files = list(conflict_files)
-
-        if settings['show_only_filenames']:
-            only_filenames = []
-            for string in conflict_files:
-                only_filenames.append(string.rpartition('/')[2])
-
-            show_files = only_filenames
-
+        show_files = self._get_representation_list(conflict_files)
         # Add an "Open all ..." option
         show_files.insert(0, messages['open_all'])
 
@@ -294,9 +283,9 @@ class ListConflictFiles(sublime_plugin.WindowCommand):
             else:
                 self._open_files(full_path[index - 1])
 
-        window.show_quick_panel(show_files, open_conflict)
+        self.window.show_quick_panel(show_files, open_conflict)
 
-    def _git_executable_found(self):
+    def _git_executable_available(self):
         try:
             execute_command(settings['git_path'])
         except FileNotFoundError:
@@ -315,6 +304,11 @@ class ListConflictFiles(sublime_plugin.WindowCommand):
         )
 
     def _determine_git_dir(self):
+        """Returns the root git repository path for the current view.
+        If the view has no file path it returns the root path for the first
+        open folder.
+
+        Returns None if both methods are unsuccessfull."""
         open_view_path = self.window.active_view().file_name()
         open_folders = self.window.folders()
 
@@ -334,6 +328,18 @@ class ListConflictFiles(sublime_plugin.WindowCommand):
                 working_dir=working_dir)
 
         return working_dir
+
+    def _get_representation_list(self, conflict_files):
+        """Returns a list with only filenames if the 'show_only_filenames'
+        option is set, otherwise it returns just a clone of the given list"""
+        if settings['show_only_filenames']:
+            only_filenames = []
+            for string in conflict_files:
+                only_filenames.append(string.rpartition('/')[2])
+
+            return only_filenames
+        else:
+            return list(conflict_files)
 
     def _open_files(self, *files):
         for file in files:
