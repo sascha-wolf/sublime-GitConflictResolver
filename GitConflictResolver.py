@@ -32,6 +32,9 @@ messages = {
     "no_conflict_found": "No conflict found",
     "no_git_repo_found": "No git repository found",
     "no_such_group": "No such conflict group found",
+    "git_executable_not_found": "Git Conflict Resolver is not able find your git executable.\n\n" +
+                                "To ensure the plugin works properly you can use the settings file to tell Git Conflict Resolver about the path.\n" +
+                                "(Preferences > Package Settings > Git Conflict Resolver > Settings - User)",
     "open_all": "Open all ..."
 }
 
@@ -242,6 +245,11 @@ class ListConflictFiles(sublime_plugin.WindowCommand):
         # Reload settings
         load_settings()
 
+        # Ensure git executable is available
+        if not self._git_executable_found():
+            sublime.error_message(messages['git_executable_not_found'])
+            return
+
         window = self.window
         git_repo = self._determine_git_dir()
         if not git_repo:
@@ -288,6 +296,14 @@ class ListConflictFiles(sublime_plugin.WindowCommand):
                 window.open_file(full_path[index - 1])
 
         window.show_quick_panel(show_files, open_conflict)
+
+    def _git_executable_found(self):
+        try:
+            execute_command(settings['git_path'])
+        except FileNotFoundError:
+            return False
+        else:
+            return True
 
     def _get_conflict_files(self, working_dir):
         # Search for conflicts using git executable
