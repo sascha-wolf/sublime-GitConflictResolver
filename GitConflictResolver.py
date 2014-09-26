@@ -30,6 +30,7 @@ icons = {
 
 messages = {
     "no_conflict_found": "No conflict found",
+    "no_git_repo_found": "No git repository found",
     "no_such_group": "No such conflict group found",
     "open_all": "Open all ..."
 }
@@ -229,23 +230,21 @@ class Keep(sublime_plugin.TextCommand):
 class ListConflictFiles(sublime_plugin.WindowCommand):
     def run(self):
         window = self.window
-        working_dir = self._determine_working_dir()
-        conflict_files = None
-        try:
-            conflict_files = self._get_conflict_files(working_dir)
-        except subprocess.CalledProcessError:
-            # Git will execute with an error when the given directory
-            # is not a repository, so we can savely ignore the error
-            pass
+        git_repo = self._determine_git_dir()
+        if not git_repo:
+            sublime.status_message(messages['no_git_repo_found'])
+            return
+
+        conflict_files = self._get_conflict_files(git_repo)
 
         if not conflict_files:
             sublime.status_message(
                 messages['no_conflict_found'] +
-                ((" (" + working_dir + ")") if working_dir else "")
+                ((" (" + git_repo + ")") if git_repo else "")
             )
             return
 
-        conflict_files = conflict_files.decode('utf-8').split('\n')
+        conflict_files = conflict_files.split('\n')
         # Remove empty strings and sort the list
         # (TODO: sort also filenames only?)
         conflict_files = sorted([x for x in conflict_files if x])
@@ -272,41 +271,68 @@ class ListConflictFiles(sublime_plugin.WindowCommand):
                 for file in conflict_files:
                     window.open_file(file)
             else:
-                window.open_file(conflict_files[index - 1])
+                window.open_file(
+                    os.path.join(git_repo, conflict_files[index - 1])
+                )
 
         window.show_quick_panel(show_files, open_conflict)
 
     def _get_conflict_files(self, working_dir):
-        startupinfo = None
-        # hide console window on windows
-        if os.name == 'nt':
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-
         # Search for conflicts using git executable
-        return subprocess.check_output([
+        return execute_command([
             settings['git_path'],
             "diff", "--name-only",
             "--diff-filter=U"
             ],
-            cwd=working_dir,
-            startupinfo=startupinfo
+            working_dir=working_dir
         )
 
-    def _determine_working_dir(self):
-        open_views = self.window.views()
+    def _determine_git_dir(self):
+        open_view_path = self.window.active_view().file_name()
         open_folders = self.window.folders()
 
         working_dir = None
-        if open_views:
+        if open_view_path:
             # Remove the traling filename, we just need the folder
             working_dir = re.sub(r"[/\\][^\\/]*$",
                                  "",
-                                 open_views[0].file_name())
+                                 open_view_path)
         elif open_folders:
             working_dir = open_folders[0]
 
+        # Get git top-level folder
+        if working_dir:
+            working_dir = execute_command([
+                settings['git_path'],
+                "rev-parse", "--show-toplevel"
+                ],
+                working_dir=working_dir)
+
         return working_dir
+
+
+def execute_command(command, working_dir=None):
+    startupinfo = None
+    # hide console window on windows
+    if os.name == 'nt':
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+    output = None
+    try:
+        output = subprocess.check_output(
+            command,
+            cwd=working_dir,
+            startupinfo=startupinfo
+        )
+    except (subprocess.CalledProcessError, AttributeError):
+        # Git will return an error when the given directory
+        # is not a repository, which means that we can ignore this error
+        pass
+    else:
+        output = str(output, encoding="utf-8").strip()
+
+    return output
 
 
 class ScanForConflicts(sublime_plugin.EventListener):
