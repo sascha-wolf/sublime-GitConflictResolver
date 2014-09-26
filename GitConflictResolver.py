@@ -52,6 +52,10 @@ default_settings = {
 
 
 def plugin_loaded():
+    load_settings()
+
+
+def load_settings():
     global subl_settings, settings
 
     subl_settings = sublime.load_settings(settings_file)
@@ -189,6 +193,9 @@ def extract(view, region, keep):
 
 class FindNextConflict(sublime_plugin.TextCommand):
     def run(self, edit):
+        # Reload settings
+        load_settings()
+
         current_selection = self.view.sel()
 
         # Use the end of the current selection for the search, or use 0 if nothing is selected
@@ -208,6 +215,9 @@ class FindNextConflict(sublime_plugin.TextCommand):
 
 class Keep(sublime_plugin.TextCommand):
     def run(self, edit, keep):
+        # Reload settings
+        load_settings()
+
         current_selection = self.view.sel()
 
         # Use the begin of the current selection for the search, or use 0 if nothing is selected
@@ -229,6 +239,9 @@ class Keep(sublime_plugin.TextCommand):
 
 class ListConflictFiles(sublime_plugin.WindowCommand):
     def run(self):
+        # Reload settings
+        load_settings()
+
         window = self.window
         git_repo = self._determine_git_dir()
         if not git_repo:
