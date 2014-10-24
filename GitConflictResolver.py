@@ -290,10 +290,9 @@ class ListConflictFiles(sublime_plugin.WindowCommand):
                 return
             elif index == 0:
                 # Open all ...
-                for file in full_path:
-                    window.open_file(file)
+                self._open_files(*full_path)
             else:
-                window.open_file(full_path[index - 1])
+                self._open_files(full_path[index - 1])
 
         window.show_quick_panel(show_files, open_conflict)
 
@@ -336,6 +335,11 @@ class ListConflictFiles(sublime_plugin.WindowCommand):
 
         return working_dir
 
+    def _open_files(self, *files):
+        for file in files:
+            view = self.window.open_file(file)
+            sublime.set_timeout_async(lambda: init_view(view), 10)
+
 
 def execute_command(command, working_dir=None):
     startupinfo = None
@@ -359,6 +363,14 @@ def execute_command(command, working_dir=None):
         output = str(output, encoding="utf-8").strip()
 
     return output
+
+
+def init_view(view):
+    if view.is_loading():
+        sublime.set_timeout(lambda: init_view(view), 10)
+    else:
+        view.run_command("find_next_conflict")
+        view.window().focus_view(view)
 
 
 class ScanForConflicts(sublime_plugin.EventListener):
