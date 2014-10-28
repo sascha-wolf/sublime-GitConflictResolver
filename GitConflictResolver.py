@@ -336,9 +336,14 @@ class ListConflictFiles(sublime_plugin.WindowCommand):
         return working_dir
 
     def _open_files(self, *files):
+        files_len = len(files)
         for file in files:
-            view = self.window.open_file(file)
-            sublime.set_timeout_async(lambda: init_view(view), 10)
+            # Workaround sublime issue #39 (open_file() does not set cursor when run from a quick panel callback)
+            sublime.set_timeout(lambda file=file: self._open_file_workaround(file), 0)
+
+    def _open_file_workaround(self, file):
+        view = self.window.open_file(file)
+        sublime.set_timeout_async(lambda: init_view(view), 10)
 
 
 def execute_command(command, working_dir=None):
@@ -370,7 +375,6 @@ def init_view(view):
         sublime.set_timeout(lambda: init_view(view), 10)
     else:
         view.run_command("find_next_conflict")
-        view.window().focus_view(view)
 
 
 class ScanForConflicts(sublime_plugin.EventListener):
