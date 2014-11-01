@@ -215,6 +215,8 @@ class ListConflictFiles(sublime_plugin.WindowCommand, git_mixin.GitMixin):
 
 
 def init_view(view):
+    return  # TODO: Find a workaround for the cursor position bug
+
     if view.is_loading():
         sublime.set_timeout(lambda: init_view(view), 50)
     else:
