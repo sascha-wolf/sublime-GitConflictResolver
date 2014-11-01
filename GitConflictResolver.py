@@ -250,40 +250,20 @@ class ListConflictFiles(sublime_plugin.WindowCommand):
             sublime.error_message(messages['git_executable_not_found'])
             return
 
-        git_repo = self._determine_git_dir()
-        if not git_repo:
+        self.git_repo = self._determine_git_dir()
+        if not self.git_repo:
             sublime.status_message(messages['no_git_repo_found'])
             return
 
-        conflict_files = self._get_conflict_files(git_repo)
+        conflict_files = self._get_conflict_files()
         if not conflict_files:
             sublime.status_message(
                 messages['no_conflict_found'] +
-                ((" (" + git_repo + ")") if git_repo else "")
+                ((" (" + self.git_repo + ")") if self.git_repo else "")
             )
             return
 
-        conflict_files = conflict_files.split('\n')
-        # Remove empty strings and sort the list
-        # (TODO: sort also filenames only?)
-        conflict_files = sorted([x for x in conflict_files if x])
-        full_path = [os.path.join(git_repo, x) for x in conflict_files]
-
-        show_files = self._get_representation_list(conflict_files)
-        # Add an "Open all ..." option
-        show_files.insert(0, messages['open_all'])
-
-        # Show the conflict files in the quickpanel and open them on selection
-        def open_conflict(index):
-            if index < 0:
-                return
-            elif index == 0:
-                # Open all ...
-                self._open_files(*full_path)
-            else:
-                self._open_files(full_path[index - 1])
-
-        self.window.show_quick_panel(show_files, open_conflict)
+        self._show_quickpanel_selection(conflict_files)
 
     def _git_executable_available(self):
         try:
@@ -293,15 +273,21 @@ class ListConflictFiles(sublime_plugin.WindowCommand):
         else:
             return True
 
-    def _get_conflict_files(self, working_dir):
+    def _get_conflict_files(self):
         # Search for conflicts using git executable
-        return execute_command([
+        conflict_files = execute_command([
             settings['git_path'],
             "diff", "--name-only",
             "--diff-filter=U"
             ],
-            working_dir=working_dir
+            working_dir=self.git_repo
         )
+        print(conflict_files)
+
+        conflict_files = conflict_files.split('\n')
+        # Remove empty strings and sort the list
+        # (TODO: sort also filenames only?)
+        return sorted([x for x in conflict_files if x])
 
     def _determine_git_dir(self):
         """Returns the root git repository path for the current view.
@@ -332,14 +318,34 @@ class ListConflictFiles(sublime_plugin.WindowCommand):
     def _get_representation_list(self, conflict_files):
         """Returns a list with only filenames if the 'show_only_filenames'
         option is set, otherwise it returns just a clone of the given list"""
+        result = None
         if settings['show_only_filenames']:
-            only_filenames = []
+            result = []
             for string in conflict_files:
-                only_filenames.append(string.rpartition('/')[2])
-
-            return only_filenames
+                result.append(string.rpartition('/')[2])
         else:
-            return list(conflict_files)
+            result = list(conflict_files)
+
+        # Add an "Open all ..." option
+        result.insert(0, messages['open_all'])
+
+        return result
+
+    def _show_quickpanel(self, conflict_files):
+        full_path = [os.path.join(self.git_repo, x) for x in conflict_files]
+        show_files = self._get_representation_list(conflict_files)
+
+        # Show the conflict files in the quickpanel and open them on selection
+        def open_conflict(index):
+            if index < 0:
+                return
+            elif index == 0:
+                # Open all ...
+                self._open_files(*full_path)
+            else:
+                self._open_files(full_path[index - 1])
+
+        self.window.show_quick_panel(show_files, open_conflict)
 
     def _open_files(self, *files):
         for file in files:
