@@ -1,0 +1,9 @@
+Changes in 1.4.7
+================
+
+Bugfixes
+--------
+
+- "Show Conflict Files" now properly adds a cursor to the newly opened views (Fixes #9)
+
+Enjoy!
