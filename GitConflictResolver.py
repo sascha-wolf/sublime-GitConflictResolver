@@ -2,16 +2,21 @@ import sublime
 import sublime_plugin
 import os
 
-from .modules import conflict_re
-from .modules import git_mixin
-from .modules import messages as msgs
-from .modules import settings
-
-icons = {
-    "ours": "Packages/Git Conflict Resolver/gutter/ours.png",
-    "ancestor": "Packages/Git Conflict Resolver/gutter/ancestor.png",
-    "theirs": "Packages/Git Conflict Resolver/gutter/theirs.png"
-}
+_st_version = int(sublime.version())
+if _st_version < 3000:
+    from modules import conflict_re
+    from modules import drawing_flags as draw
+    from modules import git_mixin
+    from modules import icons
+    from modules import messages as msgs
+    from modules import settings
+else:
+    from .modules import conflict_re
+    from .modules import drawing_flags as draw
+    from .modules import git_mixin
+    from .modules import icons
+    from .modules import messages as msgs
+    from .modules import settings
 
 
 def plugin_loaded():
@@ -54,10 +59,8 @@ def highlight_conflict_group(view, group):
             "GitConflictRegions_" + group,
             highlight_regions,
             "warning",
-            icons[group],
-            sublime.DRAW_NO_FILL |
-            sublime.DRAW_NO_OUTLINE |
-            sublime.HIDE_ON_MINIMAP
+            icons.get(group),
+            draw.hidden()
         )
 
 
@@ -70,9 +73,7 @@ def highlight_conflicts(view):
         conflict_regions,
         settings.get('matching_scope'),
         "",
-        (0 if settings.get('fill_conflict_area') else sublime.DRAW_NO_FILL)
-        |
-        (0 if settings.get('outline_conflict_area') else sublime.DRAW_NO_OUTLINE)
+        draw.visible()
     )
 
     highlight_conflict_group(view, 'ours')
@@ -239,5 +240,5 @@ class ScanForConflicts(sublime_plugin.EventListener):
 
 # ST3 automatically calls plugin_loaded when the API is ready
 # For ST2 we have to call the function manually
-if not int(sublime.version()) > 3000:
+if _st_version < 3000:
     plugin_loaded()
