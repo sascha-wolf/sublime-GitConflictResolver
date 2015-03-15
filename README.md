@@ -44,6 +44,7 @@ For information on which settings are available take a look at the commented def
 
     // This option enables the outline of the conflict area
     // By default the area will just be outlined
+    // In Sublime Text 2 the area will only be outlined if "fill_conflict_area" is false
     "outline_conflict_area": true,
 
     // This options enable the gutter marks for the different conflict groups
